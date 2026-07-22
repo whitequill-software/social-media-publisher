@@ -82,7 +82,7 @@ Create an empty GitHub repository later, add it as the remote, then configure th
 - `FACEBOOK_PAGE_ID`
 - `INSTAGRAM_ACCOUNT_ID`
 
-Optional repository variables are `GEMINI_MODEL` and `META_GRAPH_API_VERSION`. The scheduled workflow uses `0 1 * * *` because GitHub cron is UTC and Taiwan is UTC+8 without daylight-saving changes. Scheduled executions currently publish to Facebook only; manual executions default to dry-run and require an explicit `publish` checkbox. Remove `--facebook-only` from the workflow after Instagram publishing is repaired and validated.
+Optional repository variables are `GEMINI_MODEL` and `META_GRAPH_API_VERSION`. The scheduled workflow uses `0 1 * * *` because GitHub cron is UTC and Taiwan is UTC+8 without daylight-saving changes. Scheduled executions publish to Facebook and Instagram; manual executions default to dry-run and require an explicit `publish` checkbox.
 
 GitHub schedules can start later than the exact minute during high load. Keep the workflow enabled and ensure Actions are allowed in repository settings.
 

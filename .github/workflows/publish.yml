@@ -45,8 +45,7 @@ jobs:
         shell: bash
         run: |
           if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.publish }}" == "true" ]]; then
-            # Temporary: Facebook automation is enabled while Instagram setup is repaired.
-            social-publisher --publish --facebook-only
+            social-publisher --publish
           else
             social-publisher
           fi
