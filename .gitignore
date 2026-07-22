@@ -1,0 +1,17 @@
+.env
+.venv/
+client_secret.json
+client_secret_*.json
+credentials.json
+token.json
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+dist/
+build/
+*.egg-info/
+.idea/
+.vscode/

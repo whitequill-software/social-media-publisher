@@ -1,0 +1,52 @@
+name: Publish condo social post
+
+on:
+  schedule:
+    # GitHub Actions cron uses UTC. 01:00 UTC = 09:00 Asia/Taipei year-round.
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish to Facebook and Instagram (false performs a dry-run)"
+        required: true
+        type: boolean
+        default: false
+
+concurrency:
+  group: daily-social-publisher
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: python -m pip install .
+      - name: Run pipeline
+        env:
+          GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+          GDRIVE_CLIENT_ID: ${{ secrets.GDRIVE_CLIENT_ID }}
+          GDRIVE_CLIENT_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
+          GDRIVE_REFRESH_TOKEN: ${{ secrets.GDRIVE_REFRESH_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
+          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+          FACEBOOK_PAGE_ID: ${{ secrets.FACEBOOK_PAGE_ID }}
+          INSTAGRAM_ACCOUNT_ID: ${{ secrets.INSTAGRAM_ACCOUNT_ID }}
+          META_GRAPH_API_VERSION: ${{ vars.META_GRAPH_API_VERSION || 'v23.0' }}
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.publish }}" == "true" ]]; then
+            # Temporary: Facebook automation is enabled while Instagram setup is repaired.
+            social-publisher --publish --facebook-only
+          else
+            social-publisher
+          fi
