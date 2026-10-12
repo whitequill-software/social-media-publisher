@@ -15,7 +15,20 @@ def validate_caption(caption: str, profile: str) -> None:
 
 class CaptionGenerator:
     def __init__(self, api_key: str, model: str) -> None:
-        self.client = genai.Client(api_key=api_key)
+        self.client = genai.Client(
+            api_key=api_key,
+            http_options=types.HttpOptions(
+                timeout=60_000,
+                retry_options=types.HttpRetryOptions(
+                    attempts=5,
+                    initial_delay=2,
+                    max_delay=30,
+                    exp_base=2,
+                    jitter=1,
+                    http_status_codes=[408, 429, 500, 502, 503, 504],
+                ),
+            ),
+        )
         self.model = model
 
     def generate(self, *, image_bytes: bytes, mime_type: str, profile: str) -> str:
