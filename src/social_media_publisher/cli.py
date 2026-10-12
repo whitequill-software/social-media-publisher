@@ -45,12 +45,17 @@ def main() -> int:
             publishing=args.publish,
             instagram_required=not args.facebook_only,
         )
-        drive = DriveImageRepository.from_oauth_refresh_token(
-            client_id=settings.gdrive_client_id,
-            client_secret=settings.gdrive_client_secret,
-            refresh_token=settings.gdrive_refresh_token,
-            timeout_seconds=settings.public_image_timeout_seconds,
-        )
+        if settings.gdrive_auth_mode == "adc":
+            drive = DriveImageRepository.from_default_credentials(
+                timeout_seconds=settings.public_image_timeout_seconds,
+            )
+        else:
+            drive = DriveImageRepository.from_oauth_refresh_token(
+                client_id=settings.gdrive_client_id,
+                client_secret=settings.gdrive_client_secret,
+                refresh_token=settings.gdrive_refresh_token,
+                timeout_seconds=settings.public_image_timeout_seconds,
+            )
         captions = CaptionGenerator(settings.gemini_api_key, settings.gemini_model)
         publisher = None
         if args.publish:
@@ -80,3 +85,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
