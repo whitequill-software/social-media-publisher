@@ -6,7 +6,8 @@ from dataclasses import dataclass
 from typing import Any
 
 import requests
-from google.auth.exceptions import RefreshError
+from google.auth import default
+from google.auth.exceptions import GoogleAuthError, RefreshError
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
@@ -30,6 +31,21 @@ class DriveImageRepository:
     def __init__(self, service: Any, *, timeout_seconds: int = 30) -> None:
         self.service = service
         self.timeout_seconds = timeout_seconds
+
+    @classmethod
+    def from_default_credentials(cls, *, timeout_seconds: int = 30) -> DriveImageRepository:
+        """Use renewable credentials supplied by the runtime (including GitHub WIF)."""
+        try:
+            credentials, _ = default(scopes=[DRIVE_READONLY_SCOPE])
+            credentials.refresh(Request())
+        except GoogleAuthError as exc:
+            raise RuntimeError(
+                "Google Drive runtime authentication failed. Check the Workload Identity "
+                "provider, service account impersonation permission, and "
+                "GOOGLE_APPLICATION_CREDENTIALS. See docs/authentication.md."
+            ) from exc
+        service = build("drive", "v3", credentials=credentials, cache_discovery=False)
+        return cls(service, timeout_seconds=timeout_seconds)
 
     @classmethod
     def from_oauth_refresh_token(
@@ -117,3 +133,4 @@ class DriveImageRepository:
                 )
         finally:
             response.close()
+

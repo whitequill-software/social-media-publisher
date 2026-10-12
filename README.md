@@ -17,7 +17,8 @@ The Google Drive folder can remain private. The Google account that grants OAuth
 ## Requirements
 
 - Python 3.11+
-- A Google Cloud project with Drive API enabled and an OAuth 2.0 Desktop app client
+- A Google Cloud project with Drive API enabled, plus service-account federation
+  (recommended for GitHub Actions) or an OAuth 2.0 Desktop app client (legacy/local)
 - A Gemini API key
 - A Facebook Page and linked Instagram **professional** account
 - A Meta app/access token with the permissions required for Page and Instagram content publishing
@@ -31,7 +32,10 @@ python -m pip install -e ".[dev]"
 Copy-Item .env.example .env
 ```
 
-Fill in `.env` with the Drive OAuth client ID, client secret, and refresh token. `.env` and downloaded OAuth client-secret files are git-ignored. Edit `erin.md` with real, approved property and brand details.
+For the local OAuth mode, fill in `.env` with the Drive OAuth client ID, client secret,
+and refresh token. For automatic GitHub authentication, follow
+[the federation setup guide](docs/authentication.md) instead. `.env` and downloaded OAuth
+client-secret files are git-ignored. Edit `erin.md` with real, approved property and brand details.
 
 Run a non-publishing preview:
 
@@ -53,6 +57,15 @@ social-publisher --publish --facebook-only
 
 ## Google Drive setup
 
+**Recommended for GitHub Actions:** use [Workload Identity Federation](docs/authentication.md)
+with a service account shared on your image folder. Each run authenticates automatically,
+without the three `GDRIVE_*` OAuth secrets or a downloaded service account key. The guide
+includes setup commands for project `social-media-publisher`, validation, and rollback.
+Setting both `GCP_WORKLOAD_IDENTITY_PROVIDER` and `GCP_SERVICE_ACCOUNT` repository variables
+enables this mode. Existing installations keep using OAuth until those variables are set.
+
+The following personal OAuth setup remains available for local use and compatibility:
+
 1. Enable Google Drive API, configure the OAuth consent screen, and create an OAuth 2.0 **Desktop app** client in Google Cloud.
 2. Download the client JSON as `client_secret.json` in the project folder. It is git-ignored and must never be committed.
 3. Run `python get_refresh_token.py` once on a computer with a browser, sign in as the Google account that owns or can read the image folder, and approve read-only Drive access.
@@ -71,16 +84,18 @@ Meta access tokens expire or can be revoked. Use a long-lived supported token fl
 
 ## GitHub Actions setup (after local review)
 
-Create an empty GitHub repository later, add it as the remote, then configure these Actions secrets:
+In this repository, configure these Actions secrets:
 
 - `GOOGLE_DRIVE_FOLDER_ID`
-- `GDRIVE_CLIENT_ID`
-- `GDRIVE_CLIENT_SECRET`
-- `GDRIVE_REFRESH_TOKEN`
 - `GEMINI_API_KEY`
 - `META_ACCESS_TOKEN`
 - `FACEBOOK_PAGE_ID`
 - `INSTAGRAM_ACCOUNT_ID`
+
+For recommended federation authentication, also set the `GCP_WORKLOAD_IDENTITY_PROVIDER`
+and `GCP_SERVICE_ACCOUNT` Actions **variables** as described in
+[the setup guide](docs/authentication.md). For legacy OAuth authentication only, configure
+the additional `GDRIVE_CLIENT_ID`, `GDRIVE_CLIENT_SECRET`, and `GDRIVE_REFRESH_TOKEN` secrets.
 
 Optional repository variables are `GEMINI_MODEL` and `META_GRAPH_API_VERSION`. The scheduled workflow uses `0 1 * * *` because GitHub cron is UTC and Taiwan is UTC+8 without daylight-saving changes. Scheduled executions currently publish to Facebook only; manual executions default to dry-run and require an explicit `publish` checkbox. Remove `--facebook-only` from the workflow after Instagram publishing is repaired and validated.
 
@@ -113,3 +128,4 @@ No API credentials are needed for the unit tests; all external services are fake
 ## License
 
 MIT — see [`LICENSE`](LICENSE).
+

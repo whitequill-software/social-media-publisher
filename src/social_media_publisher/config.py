@@ -43,6 +43,7 @@ class Settings:
     public_image_timeout_seconds: int
     instagram_poll_seconds: int
     instagram_poll_attempts: int
+    gdrive_auth_mode: str = "oauth"
 
     @classmethod
     def from_env(cls, *, publishing: bool, instagram_required: bool = True) -> Settings:
@@ -50,11 +51,16 @@ class Settings:
         if not profile_path.is_file():
             raise ConfigurationError(f"Erin profile file not found: {profile_path}")
 
+        auth_mode = os.getenv("GDRIVE_AUTH_MODE", "oauth").strip().lower()
+        if auth_mode not in {"oauth", "adc"}:
+            raise ConfigurationError("GDRIVE_AUTH_MODE must be oauth or adc")
+
         return cls(
             drive_folder_id=_required("GOOGLE_DRIVE_FOLDER_ID"),
-            gdrive_client_id=_required("GDRIVE_CLIENT_ID"),
-            gdrive_client_secret=_required("GDRIVE_CLIENT_SECRET"),
-            gdrive_refresh_token=_required("GDRIVE_REFRESH_TOKEN"),
+            gdrive_client_id=_required("GDRIVE_CLIENT_ID") if auth_mode == "oauth" else "",
+            gdrive_client_secret=_required("GDRIVE_CLIENT_SECRET") if auth_mode == "oauth" else "",
+            gdrive_refresh_token=_required("GDRIVE_REFRESH_TOKEN") if auth_mode == "oauth" else "",
+            gdrive_auth_mode=auth_mode,
             gemini_api_key=_required("GEMINI_API_KEY"),
             gemini_model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip(),
             meta_access_token=_required("META_ACCESS_TOKEN") if publishing else None,
@@ -70,3 +76,4 @@ class Settings:
             instagram_poll_seconds=_positive_int("INSTAGRAM_POLL_SECONDS", 5),
             instagram_poll_attempts=_positive_int("INSTAGRAM_POLL_ATTEMPTS", 12),
         )
+
