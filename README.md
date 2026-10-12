@@ -60,7 +60,7 @@ social-publisher --publish --facebook-only
 **Recommended for GitHub Actions:** use [Workload Identity Federation](docs/authentication.md)
 with a service account shared on your image folder. Each run authenticates automatically,
 without the three `GDRIVE_*` OAuth secrets or a downloaded service account key. The guide
-includes setup commands for project `social-media-publisher`, validation, and rollback.
+includes setup commands for project `social-media-publisher-503109`, validation, and rollback.
 Setting both `GCP_WORKLOAD_IDENTITY_PROVIDER` and `GCP_SERVICE_ACCOUNT` repository variables
 enables this mode. Existing installations keep using OAuth until those variables are set.
 
